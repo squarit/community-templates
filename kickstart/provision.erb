@@ -21,6 +21,7 @@ This template accepts the following parameters:
 - ntp-server: string (default="0.fedora.pool.ntp.org")
 - bootloader-append: string (default="nofb quiet splash=quiet")
 - disable-firewall: boolean (default=false)
+- enable-lsb: boolean (default=true)
 %>
 <%
   rhel_compatible = @host.operatingsystem.family == 'Redhat' && @host.operatingsystem.name != 'Fedora'
@@ -123,7 +124,7 @@ dhclient
 ntp
 wget
 @Core
-<% if os_major >= 6 -%>
+<% if os_major >= 6 && @host.param_true?('enable-lsb') -%>
 redhat-lsb-core
 <% end -%>
 <% if rhel_compatible && os_major > 4 && !@host.param_false?('enable-epel') -%>
