@@ -22,6 +22,7 @@ This template accepts the following parameters:
 - bootloader-append: string (default="nofb quiet splash=quiet")
 - disable-firewall: boolean (default=false)
 - enable-lsb: boolean (default=true)
+- exclude-packages: string (default="")
 %>
 <%
   rhel_compatible = @host.operatingsystem.family == 'Redhat' && @host.operatingsystem.name != 'Fedora'
@@ -141,6 +142,11 @@ puppetlabs-release-pc1
 <% end -%>
 <% if salt_enabled %>
 salt-minion
+<% end -%>
+<% if @host.params['exclude-packages'] %>
+<% @host.params['exclude-packages'].split(',').each do |package| %>
+-<%= package %>
+<% end -%>
 <% end -%>
 <%= section_end -%>
 
