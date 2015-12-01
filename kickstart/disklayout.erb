@@ -8,5 +8,4 @@ oses:
 %>
 zerombr
 clearpart --all --initlabel
-autopart
-
+autopart --fstype=<%= @host.params['partitioning-filesystem'] || 'xfs' %>
