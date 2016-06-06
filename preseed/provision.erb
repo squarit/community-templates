@@ -85,7 +85,7 @@ user-setup-udeb passwd/make-user boolean false
 <% if @host.param_true?('enable-puppetlabs-repo') -%>
 # Puppetlabs products
 d-i apt-setup/local<%= repos %>/repository string \
-      http://apt.puppetlabs.com <%= @host.operatingsystem.release_name %> main
+      deb http://apt.puppetlabs.com <%= @host.operatingsystem.release_name %> main
 d-i apt-setup/local<%= repos %>/comment string Puppetlabs products
 d-i apt-setup/local<%= repos %>/source boolean true
 d-i apt-setup/local<%= repos %>/key string http://apt.puppetlabs.com/pubkey.gpg
@@ -100,7 +100,7 @@ d-i apt-setup/local<%= repos %>/key string http://apt.puppetlabs.com/pubkey.gpg
 <% end -%>
 <% if @host.param_true?('enable-puppetlabs-pc1-repo') -%>
 # Puppetlabs PC1 <%= @host.operatingsystem.release_name %> Repository
-d-i apt-setup/local<%= repos %>/repository string http://apt.puppetlabs.com <%= @host.operatingsystem.release_name %> PC1
+d-i apt-setup/local<%= repos %>/repository string deb http://apt.puppetlabs.com <%= @host.operatingsystem.release_name %> PC1
 d-i apt-setup/local<%= repos %>/comment string Puppetlabs PC1 <%= @host.operatingsystem.release_name %> Repository
 d-i apt-setup/local<%= repos %>/source boolean true
 d-i apt-setup/local<%= repos %>/key string http://apt.puppetlabs.com/pubkey.gpg
