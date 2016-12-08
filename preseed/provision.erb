@@ -113,7 +113,11 @@ tasksel tasksel/first multiselect minimal, ssh-server, openssh-server
 
 # Install some base packages
 d-i pkgsel/include string <%= puppet_package %> <%= salt_package %> lsb-release
+<% if /^apt-/ =~ @host.name %>
+d-i pkgsel/update-policy select none
+<% else %>
 d-i pkgsel/update-policy select unattended-upgrades
+<% end %>
 
 popularity-contest popularity-contest/participate boolean false
 
