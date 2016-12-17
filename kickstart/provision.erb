@@ -23,6 +23,8 @@ This template accepts the following parameters:
 - disable-firewall: boolean (default=false)
 - package_upgrade: boolean (default=true)
 - disable-uek: boolean (default=false)
+- enable-lsb: boolean (default=true)
+- exclude-packages: string (default="")
 %>
 <%
   rhel_compatible = @host.operatingsystem.family == 'Redhat' && @host.operatingsystem.name != 'Fedora'
@@ -129,7 +131,7 @@ dhclient
 ntp
 wget
 @Core
-<% if os_major >= 6 -%>
+<% if os_major >= 6 && @host.param_true?('enable-lsb') -%>
 redhat-lsb-core
 <% end -%>
 <% if rhel_compatible && os_major > 4 && !@host.param_false?('enable-epel') -%>
@@ -146,6 +148,11 @@ puppetlabs-release-pc1
 <% end -%>
 <% if salt_enabled %>
 salt-minion
+<% end -%>
+<% if @host.params['exclude-packages'] %>
+<% @host.params['exclude-packages'].split(',').each do |package| %>
+-<%= package %>
+<% end -%>
 <% end -%>
 <%= section_end -%>
 

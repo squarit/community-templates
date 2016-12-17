@@ -81,6 +81,32 @@ d-i passwd/make-user boolean false
 user-setup-udeb passwd/make-user boolean false
 
 <% repos = 0 %>
+<% if puppet_enabled -%>
+<% if @host.param_true?('enable-puppetlabs-repo') -%>
+# Puppetlabs products
+d-i apt-setup/local<%= repos %>/repository string \
+      deb <%= @host.params['puppet_apt_repo'] %> <%= @host.operatingsystem.release_name %> main
+d-i apt-setup/local<%= repos %>/comment string Puppetlabs products
+d-i apt-setup/local<%= repos %>/source boolean true
+d-i apt-setup/local<%= repos %>/key string <%= @host.params['puppet_apt_repo'] %>/pubkey.gpg
+<% repos += 1 -%>
+# Puppetlabs dependencies
+d-i apt-setup/local<%= repos %>/repository string \
+      <%= @host.params['puppet_apt_repo'] %> <%= @host.operatingsystem.release_name %> dependencies
+d-i apt-setup/local<%= repos %>/comment string Puppetlabs dependencies
+d-i apt-setup/local<%= repos %>/source boolean true
+d-i apt-setup/local<%= repos %>/key string <%= @host.params['puppet_apt_repo'] %>/pubkey.gpg
+<% repos += 1 -%>
+<% end -%>
+<% if @host.param_true?('enable-puppetlabs-pc1-repo') -%>
+# Puppetlabs PC1 <%= @host.operatingsystem.release_name %> Repository
+d-i apt-setup/local<%= repos %>/repository string deb <%= @host.params['puppet_apt_repo'] %> <%= @host.operatingsystem.release_name %> PC1
+d-i apt-setup/local<%= repos %>/comment string Puppetlabs PC1 <%= @host.operatingsystem.release_name %> Repository
+d-i apt-setup/local<%= repos %>/source boolean true
+d-i apt-setup/local<%= repos %>/key string <%= @host.params['puppet_apt_repo'] %>/pubkey.gpg
+<% repos += 1 -%>
+<% end -%>
+<% end -%>
 
 <% if salt_enabled -%>
 <% salt_package = 'salt-minion' -%>
@@ -112,7 +138,7 @@ tasksel tasksel/first multiselect minimal, ssh-server, openssh-server
 <% end -%>
 
 # Install some base packages
-d-i pkgsel/include string <%= puppet_package %> <%= salt_package %> lsb-release
+d-i pkgsel/include string <%= puppet_package %> <%= salt_package %> lsb-release apt-transport-https
 d-i pkgsel/update-policy select <%= @host.params['preseed-update-policy'] || 'unattended-upgrades' %>
 
 popularity-contest popularity-contest/participate boolean false
@@ -129,4 +155,6 @@ d-i grub-installer/bootdev string default
 <% end -%>
 d-i finish-install/reboot_in_progress note
 
-d-i preseed/late_command string wget -Y off <%= @static ? "'#{foreman_url('finish')}&static=true'" : foreman_url('finish') %> -O /target/tmp/finish.sh && in-target chmod +x /tmp/finish.sh && in-target /tmp/finish.sh
+d-i preseed/late_command string \
+in-target sed -i 's/PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config ; \
+wget -Y off <%= @static ? "'#{foreman_url('finish')}&static=true'" : foreman_url('finish') %> -O /target/tmp/finish.sh && in-target chmod +x /tmp/finish.sh && in-target /tmp/finish.sh
