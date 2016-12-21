@@ -13,6 +13,7 @@ oses:
   salt_enabled = @host.params['salt_master'] ? true : false
   os_major = @host.operatingsystem.major.to_i
   squeeze_or_older = (@host.operatingsystem.name == 'Debian' && os_major <= 6)
+  xenial_or_newer = (@host.operatingsystem.name == 'Ubuntu' && os_major >= 14)
 %>
 # Locale
 d-i debian-installer/locale string <%= @host.params['lang'] || 'en_US' %>
@@ -92,6 +93,13 @@ d-i passwd/make-user boolean false
 user-setup-udeb passwd/make-user boolean false
 
 <% repos = 0 %>
+<% if xenial_or_newer && (puppet_enabled || salt_enabled) -%>
+d-i apt-setup/local<%= repos %>/repository string \
+      deb http://<%= @preseed_server %>/<%= @preseed_path %> <%= @host.operatingsystem.release_name %> restricted
+d-i apt-setup/local<%= repos %>/comment string Xenial Workaround
+d-i apt-setup/local<%= repos %>/source boolean false
+<% repos += 1 -%>
+<% end -%>
 <% if puppet_enabled -%>
 <% if @host.param_true?('enable-puppetlabs-repo') -%>
 # Puppetlabs products
@@ -137,6 +145,13 @@ d-i apt-setup/local<%= repos %>/key string http://keyserver.ubuntu.com/pks/looku
 <% end -%>
 <% else -%>
 <% salt_package = '' -%>
+<% end -%>
+
+<% if @host.param_true?('disable-ubuntu-security-repo') -%>
+d-i apt-setup/services-select-ubuntu multiselect none
+<% end -%>
+<% if @host.param_true?('disable-ubuntu-backports-repo') -%>
+d-i apt-setup/backports boolean false
 <% end -%>
 
 # Install minimal task set (see tasksel --task-packages minimal)
