@@ -29,5 +29,7 @@ The templates use some Host Parameters to contol the flow of the template. These
 * `preseed-live-installer`: Informs the installer that the installation source is from an iso. Can be `true` or `false`. (defaults: notset/false)
 * `preseed-kernel-image`: Specify the kernel-image to install. Ex: `linux-image-generic-lts-xenial` or `linux-image-4.4.0-34-generic`. (default: empty)
 * `preseed-post-install-upgrade`: Upgrade Debian post installation. Can be `none`, `safe-upgrade`, or `full-upgrade`. (default: none)
+* `disable-ubuntu-security-repo`: Disable the Ubuntu security repo. Can be `true` or `false`.
+* `disable-ubuntu-backports-repo`: Disable the Ubuntu backports repo. Can be `true` or false`.
 
 Detailed description is available at https://www.debian.org/releases/stable/amd64/apbs04.html.en
