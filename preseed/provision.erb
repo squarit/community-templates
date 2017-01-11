@@ -166,7 +166,7 @@ tasksel tasksel/first multiselect minimal, ssh-server, openssh-server
 <% end -%>
 
 # Install some base packages
-d-i pkgsel/include string <%= puppet_package %> <%= salt_package %> lsb-release
+d-i pkgsel/include string <%= puppet_package %> <%= salt_package %> lsb-release apt-transport-https
 d-i pkgsel/update-policy select <%= @host.params['preseed-update-policy'] || 'unattended-upgrades' %>
 d-i pkgsel/upgrade select <%= @host.params['preseed-post-install-upgrade'] || 'none' %>
 
