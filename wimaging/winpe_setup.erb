@@ -74,7 +74,7 @@ echo Apply Drivers
 dism.exe /Image:C:\ /Add-Driver /Driver:c:\drivers\ /Recurse /ForceUnsigned
 
 echo Tell foreman build has finished
-%WGET% --no-check-certificate http://foreman-a-01.corp.squareup.com/unattended/built
+%WGET% --no-check-certificate <%= foreman_url('built') %>
 
 :: Uncomment PAUSE for debug:
 :: PAUSE
