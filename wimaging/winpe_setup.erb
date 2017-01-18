@@ -21,8 +21,6 @@ set WGET=x:\wimaging\deploy\wget64.exe
 
 echo Write the install image to the partition
 dism.exe /apply-image /imagefile:C:\install.wim /name:"<%= @host.params['wimImageName'] %>" /ApplyDir:C:\
-::imagex.exe /apply C:\install.wim 3 C:\
-::bcdboot.exe C:\Windows /l en-US
 
 echo removing install.wim
 del /q /s C:\install.wim
