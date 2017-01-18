@@ -55,6 +55,6 @@ name: wimaging_network_config
                     <EnableAdapterDomainNameRegistration>false</EnableAdapterDomainNameRegistration>
                 </Interface>
             </Interfaces>
-            <DNSDomain>corp.squareup.com</DNSDomain>
+            <DNSDomain><%= @host.domain %></DNSDomain>
         </component>
 <% end -%>
