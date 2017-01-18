@@ -26,7 +26,7 @@ name: wimaging_network_config
                     <Ipv4Settings>
                         <DhcpEnabled>false</DhcpEnabled>
                     </Ipv4Settings>
-                    <Identifier><%= @host.mac %></Identifier>
+                    <Identifier><%= @host.mac.gsub(':', '-') %></Identifier>
                     <Routes>
                         <Route wcm:action="add">
                             <Identifier>0</Identifier>
@@ -39,5 +39,22 @@ name: wimaging_network_config
                     </UnicastIpAddresses>
                 </Interface>
             </Interfaces>
+        </component>
+        <component name="Microsoft-Windows-DNS-Client" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <DNSSuffixSearchOrder>
+                <DomainName wcm:action="add" wcm:keyValue="1"><%= @host.domain %></DomainName>
+            </DNSSuffixSearchOrder>
+            <Interfaces>
+                <Interface wcm:action="add">
+                    <DNSServerSearchOrder>
+                        <IpAddress wcm:action="add" wcm:keyValue="1"><%= subnet.dns_primary %></IpAddress>
+                        <IpAddress wcm:action="add" wcm:keyValue="2"><%= subnet.dns_primary %></IpAddress>
+                    </DNSServerSearchOrder>
+                    <DisableDynamicUpdate>true</DisableDynamicUpdate>
+                    <Identifier><%= @host.mac.gsub(':', '-') %></Identifier>
+                    <EnableAdapterDomainNameRegistration>false</EnableAdapterDomainNameRegistration>
+                </Interface>
+            </Interfaces>
+            <DNSDomain>corp.squareup.com</DNSDomain>
         </component>
 <% end -%>
