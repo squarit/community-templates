@@ -48,7 +48,7 @@ name: wimaging_network_config
                 <Interface wcm:action="add">
                     <DNSServerSearchOrder>
                         <IpAddress wcm:action="add" wcm:keyValue="1"><%= subnet.dns_primary %></IpAddress>
-                        <IpAddress wcm:action="add" wcm:keyValue="2"><%= subnet.dns_primary %></IpAddress>
+                        <IpAddress wcm:action="add" wcm:keyValue="2"><%= subnet.dns_secondary %></IpAddress>
                     </DNSServerSearchOrder>
                     <DisableDynamicUpdate>true</DisableDynamicUpdate>
                     <Identifier><%= @host.mac.gsub(':', '-') %></Identifier>
