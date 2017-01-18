@@ -31,7 +31,7 @@ name: wimaging_network_config
                         <Route wcm:action="add">
                             <Identifier>0</Identifier>
                             <NextHopAddress><%= subnet.gateway %></NextHopAddress>
-                            <Prefix><%= subnet.cidr %></Prefix>
+                            <Prefix>0.0.0.0/0</Prefix>
                         </Route>
                     </Routes>
                     <UnicastIpAddresses>
