@@ -101,16 +101,16 @@ params:
   wget.exe <%= foreman_url('built') %>
 
   <% if @host.params['foremanDebug'] != true %>
-    echo Safely removing c:\deploy
-    sdelete.exe -accepteula -p 2 -r c:\deploy
-
     echo remove leftover directories
     rmdir /s /q c:\wimaging
     rmdir /s /q c:\minint
-    rmdir /s /q c:\deploy
     rmdir /s /q c:\extras
 
-    echo rebooting...
-    shutdown /r /t 5
+    echo rebooting hopefully after cleanup is done...
+    shutdown /r /t 10
+
+    echo Safely removing c:\deploy
+    sdelete.exe -accepteula -p 2 -r c:\deploy
+    rmdir /s /q c:\deploy
   <% end -%>
 <% end -%>
