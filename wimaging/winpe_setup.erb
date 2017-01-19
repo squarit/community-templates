@@ -43,7 +43,7 @@ echo Downloading unattend.xml
 echo Downlaod post-install Windows setup script
 echo This will be invoked via the unattend.xml during OOBE
 md c:\deploy
-%WGET% --no-check-certificate <%= @host.os.medium_uri(@host).to_s %>/extras/foreman_windows_postinstall.ps1 -O C:\deploy\foreman_windows_postinstall.ps1
+%WGET% --no-check-certificate <%= @host.os.medium_uri(@host).to_s %>/extras/foreman_windows_postinstall.ps1 -O C:\foreman_windows_postinstall.ps1
 
 echo Downloading finsh script and activating SetupComplete.cmd
 %WGET% --no-verbose <%= foreman_url("finish") -%> -O C:\deploy\foreman-finish.bat
