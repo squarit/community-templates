@@ -4,6 +4,7 @@ name: VMWare default PXELinux
 oses:
 - RedHat
 -%>
+<% osver = "#{@host.operatingsystem.major}.#{@host.operatingsystem.minor}" -%>
 <%
 if @host.param_true?('serial-console')
     output_console = "gdbPort=none logPort=none tty2Port=com2"
@@ -11,11 +12,14 @@ else
     output_console = ""
 end
 -%>
+DEFAULT <%= template_name %>
+NOHALT 1
+PROMPT 0
+TIMEOUT <%= @host.params['loader_timeout'] || 10 %>
 <% if @host.param_true?('serial-console') -%>
-serial 1 115200
+SERIAL 1 115200
 <% end -%>
-default esxi551
-label esxi551
-    kernel boot/esxi551/mboot.c32
-    append -c boot/esxi551/boot.cfg ks=<%= foreman_url('provision')%>&static=yes ksdevice=vmnic0 kssendmac <%= output_console %>
-IPAPPEND 2
+LABEL <%= template_name %>
+    KERNEL boot/<%= @host.operatingsystem.name %>-<%= osver %>/mboot.c32
+    APPEND -c boot/<%= @host.operatingsystem.name %>-<%= osver %>/boot.cfg ks=<%= foreman_url('provision')%>&static=yes ksdevice=<%= @host.provision_interface.mac %> kssendmac <%= output_console %>
+    IPAPPEND 2
