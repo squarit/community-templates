@@ -13,7 +13,6 @@ else
 end
 -%>
 DEFAULT <%= template_name %>
-NOHALT 1
 PROMPT 0
 TIMEOUT <%= @host.params['loader_timeout'] || 10 %>
 <% if @host.param_true?('serial-console') -%>
