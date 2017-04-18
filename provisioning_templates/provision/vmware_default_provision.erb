@@ -1,0 +1,64 @@
+<%#
+kind: provision
+name: VMWare default
+oses:
+- RedHat
+-%>
+
+# Accept the VMware End User License Agreement
+vmaccepteula
+
+# Configure networking
+network --bootproto=<%= @static ? "static --ip=#{@host.ip} --netmask=#{@host.subnet.mask} --gateway=#{@host.subnet.gateway} --nameserver=#{[@host.subnet.dns_primary,@host.subnet.dns_secondary].reject{|n| n.blank?}.join(',')}" : 'dhcp' %> --hostname=<%= @host %> --device=vmnic0
+
+# Set the root password for the DCUI and Tech Support Mode
+rootpw --iscrypted <%= root_pass %>
+
+# Install to the local system
+<% if @host.params['install-disk'] -%>
+install --firstdisk=<%= @host.params['install-disk'] %> --overwritevmfs
+<% else -%>
+install --firstdisk=local --overwritevmfs
+<% end -%>
+
+<% if @host.params['esxi-license'] -%>
+# set the vSphere ESXi license key
+serialnum --esx=<%= @host.params['esxi-license'] %>
+<% end -%>
+
+<% unless @host.param_true?('post-ks-debug') -%>
+# halt install on warnings
+paranoid
+<% end -%>
+
+# reboot after install
+reboot
+
+%post --interpreter=busybox
+# Inform foreman that we are done
+wget -q -O /dev/null --no-check-certificate <%= foreman_url('built') %> || true
+
+
+%firstboot --interpreter=busybox
+# enable & start remote ESXi Shell  (SSH)
+vim-cmd hostsvc/enable_ssh
+vim-cmd hostsvc/start_ssh
+
+# enable & start ESXi Shell (TSM)
+vim-cmd hostsvc/enable_esx_shell
+vim-cmd hostsvc/start_esx_shell
+
+# enable the host firewall
+esxcli network firewall set -e true
+
+<% if @host.param_true?('serial-console') -%>
+# enable output to serial console
+#disabled for now, unable to configure for both serial and console output
+#esxcli system settings kernel set --setting=tty2Port --value=com2
+<% end -%>
+
+# backup ESXi configuration to persist changes
+/sbin/auto-backup.sh
+
+# Needed for configuration changes that could not be performed in esxcli
+esxcli system shutdown reboot -d 60 -r "rebooting after host configurations"

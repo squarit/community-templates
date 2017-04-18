@@ -1,0 +1,139 @@
+<%#
+kind: provision
+name: Wimaging default provision
+oses:
+- Windows Server 2008
+- Windows Server 2008 R2
+- Windows Server 2012
+- Windows Server 2012 R2
+- Windows Server 2016
+- Windows
+# Parameters are expected to be set in Foreman (globally or per group/host)
+params:
+- windowsLicenseKey: ABCDE-ABCDE-ABCDE-ABCDE-ABCDE # Valid Windows license key
+- windowsLicenseOrganization: IT # Org managing the Windows License
+- windowsLicenseOwner: COMPANY INC # Organization that Owns the Key
+- systemLocale: en-US
+- systemUILanguage: en-US
+- systemTimeZone: Pacific Standard Time #see https://msdn.microsoft.com/en-us/library/ms912391(v=winembedded.11).aspx
+- wimImageName: Windows 8.1 Pro # Image name seems only necessary if the WIM contains more than one image
+- wimImagePath: c:/wimaging/install/win7x64/sources/install.wim # Path to install.wim on technician pc
+- windowsAdminPass: # base64 encoded password from windows imaging toolkit
+- windowsLocalAdminPass: # base64 encoded password from windows imaging toolkit
+-%>
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <settings pass="generalize">
+        <component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SkipRearm>1</SkipRearm>
+        </component>
+    </settings>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RunSynchronous>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <Path>net user administrator /active:yes</Path>
+                </RunSynchronousCommand>
+            </RunSynchronous>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <ProductKey><%= @host.params['windowsLicenseKey'] %></ProductKey>
+            <ComputerName><%= @host.shortname %></ComputerName>
+            <TimeZone><%= @host.params['systemTimeZone'] %></TimeZone>
+            <RegisteredOrganization>Microsoft</RegisteredOrganization>
+            <RegisteredOwner>AutoBVT</RegisteredOwner>
+        </component>
+        <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SkipAutoActivation>false</SkipAutoActivation>
+        </component>
+<%= snippet 'Community wimaging_network_config' -%>
+<% if @host.param_true?('windowsEnableTSAdmin') -%>
+        <component name="Microsoft-Windows-TerminalServices-LocalSessionManager" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <fDenyTSConnections>false</fDenyTSConnections>
+        </component>
+        <component name="Networking-MPSSVC-Svc" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <FirewallGroups>
+                <FirewallGroup wcm:action="add" wcm:keyValue="RemoteDesktop">
+                    <Active>true</Active>
+                    <Group>@FirewallAPI.dll,-28752</Group>
+                    <Profile>all</Profile>
+                </FirewallGroup>
+            </FirewallGroups>
+        </component>
+<% end -%>
+    </settings>
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale><%= @host.params['systemLocale'] %></InputLocale>
+            <SystemLocale><%= @host.params['systemLocale'] %></SystemLocale>
+            <UILanguage><%= @host.params['systemLocale'] %></UILanguage>
+            <UILanguageFallback></UILanguageFallback>
+            <UserLocale><%= @host.params['systemLocale'] %></UserLocale>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <AutoLogon>
+                <Password>
+                    <Value><%= @host.params['windowsAdminPass'] %></Value>
+                    <PlainText>false</PlainText>
+                </Password>
+                <Enabled>true</Enabled>
+                <LogonCount>2</LogonCount>
+                <Username>administrator</Username>
+            </AutoLogon>
+            <FirstLogonCommands>
+                <SynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <CommandLine>cscript /b c:\windows\system32\slmgr.vbs /ipk <%= @host.params['windowsLicenseKey'] %></CommandLine>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>2</Order>
+                    <CommandLine>cscript /b c:\windows\system32\slmgr.vbs /ato</CommandLine>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c &quot;powershell.exe Set-ExecutionPolicy Unrestricted -force&quot;</CommandLine>
+                    <Order>3</Order>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c &quot;powershell.exe c:\foreman_windows_postinstall.ps1&quot;</CommandLine>
+                    <Order>4</Order>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>del.exe c:\foreman_windows_postinstall.ps1</CommandLine>
+                    <Order>5</Order>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+            </FirstLogonCommands>
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <NetworkLocation>Work</NetworkLocation>
+                <ProtectYourPC>1</ProtectYourPC>
+            </OOBE>
+            <UserAccounts>
+                <AdministratorPassword>
+                    <Value><%= @host.params['windowsLocalAdminPass'] %></Value>
+                    <PlainText>false</PlainText>
+                </AdministratorPassword>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Password>
+                            <Value><%= @host.params['windowsAdminPass'] %></Value>
+                            <PlainText>false</PlainText>
+                        </Password>
+                        <Description>LocalAdministrator</Description>
+                        <DisplayName>Administrator</DisplayName>
+                        <Group>Administrators</Group>
+                        <Name>Administrator</Name>
+                    </LocalAccount>
+                </LocalAccounts>
+            </UserAccounts>
+            <RegisteredOrganization><%= @host.params['windowsLicenseOrganization'] %></RegisteredOrganization>
+            <RegisteredOwner><%= @host.params['windowsLicenseOwner'] %></RegisteredOwner>
+        </component>
+    </settings>
+    <cpi:offlineImage cpi:source="wim:<%= @host.params['wimImagePath'] %>#<%= @host.params['wimImageName'] %>" xmlns:cpi="urn:schemas-microsoft-com:cpi" />
+</unattend>

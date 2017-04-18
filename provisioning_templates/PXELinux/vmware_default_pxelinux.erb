@@ -1,0 +1,21 @@
+<%#
+kind: PXELinux
+name: VMWare default PXELinux
+oses:
+- RedHat
+-%>
+<%
+if @host.param_true?('serial-console')
+    output_console = "gdbPort=none logPort=none tty2Port=com2"
+else
+    output_console = ""
+end
+-%>
+<% if @host.param_true?('serial-console') -%>
+serial 1 115200
+<% end -%>
+default esxi551
+label esxi551
+    kernel boot/esxi551/mboot.c32
+    append -c boot/esxi551/boot.cfg ks=<%= foreman_url('provision')%>&static=yes ksdevice=vmnic0 kssendmac <%= output_console %>
+IPAPPEND 2
