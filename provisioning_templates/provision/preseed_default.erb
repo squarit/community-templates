@@ -90,38 +90,12 @@ d-i passwd/make-user boolean false
 user-setup-udeb passwd/make-user boolean false
 
 <% repos = 0 %>
-<% if xenial_or_newer && (puppet_enabled || salt_enabled) -%>
+<% if xenial_or_newer && salt_enabled -%>
 d-i apt-setup/local<%= repos %>/repository string \
       deb http://<%= @preseed_server %>/<%= @preseed_path %> <%= @host.operatingsystem.release_name %> restricted
 d-i apt-setup/local<%= repos %>/comment string Xenial Workaround
 d-i apt-setup/local<%= repos %>/source boolean false
 <% repos += 1 -%>
-<% end -%>
-<% if puppet_enabled -%>
-<% if @host.param_true?('enable-puppetlabs-repo') -%>
-# Puppetlabs products
-d-i apt-setup/local<%= repos %>/repository string \
-      deb <%= @host.params['puppet_apt_repo'] %> <%= @host.operatingsystem.release_name %> main
-d-i apt-setup/local<%= repos %>/comment string Puppetlabs products
-d-i apt-setup/local<%= repos %>/source boolean true
-d-i apt-setup/local<%= repos %>/key string <%= @host.params['puppet_apt_repo'] %>/pubkey.gpg
-<% repos += 1 -%>
-# Puppetlabs dependencies
-d-i apt-setup/local<%= repos %>/repository string \
-      <%= @host.params['puppet_apt_repo'] %> <%= @host.operatingsystem.release_name %> dependencies
-d-i apt-setup/local<%= repos %>/comment string Puppetlabs dependencies
-d-i apt-setup/local<%= repos %>/source boolean true
-d-i apt-setup/local<%= repos %>/key string <%= @host.params['puppet_apt_repo'] %>/pubkey.gpg
-<% repos += 1 -%>
-<% end -%>
-<% if @host.param_true?('enable-puppetlabs-pc1-repo') -%>
-# Puppetlabs PC1 <%= @host.operatingsystem.release_name %> Repository
-d-i apt-setup/local<%= repos %>/repository string deb <%= @host.params['puppet_apt_repo'] %> <%= @host.operatingsystem.release_name %> PC1
-d-i apt-setup/local<%= repos %>/comment string Puppetlabs PC1 <%= @host.operatingsystem.release_name %> Repository
-d-i apt-setup/local<%= repos %>/source boolean true
-d-i apt-setup/local<%= repos %>/key string <%= @host.params['puppet_apt_repo'] %>/pubkey.gpg
-<% repos += 1 -%>
-<% end -%>
 <% end -%>
 
 <% if salt_enabled -%>
