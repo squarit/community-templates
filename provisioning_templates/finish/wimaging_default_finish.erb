@@ -73,7 +73,7 @@ params:
   <% end%>
 
   Write-Host 'Tell foreman build has finished'
-  wget.exe <%= foreman_url('built') %>
+  Invoke-WebRequest "<%= foreman_url('built') %>"
 
   <% if @host.params['foremanDebug'] != true %>
     $remove_imaging_files = @(
