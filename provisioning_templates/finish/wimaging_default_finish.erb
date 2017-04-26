@@ -30,9 +30,9 @@ params:
 
 <% unless @host.params['localAdminAccountDisabled'] -%>
   function enableAccount($user) {
-    Write-Host "Activating $user account"
+    Write-Host "Activating ${user} account"
     $EnableUserCode = 512
-    $User = [ADSI]"WinNT://localhost/$user"
+    $User = [ADSI]"WinNT://localhost/${user}"
     $User.userflags = $EnableUserCode
     $User.setinfo()
   }
@@ -42,14 +42,14 @@ params:
 <% if @host.pxe_build? %>
   <% if @host.params['ntp-server'] %>
     function configNTP($ntpservers) {
-      Write-Host "Setting NTP Servers to $ntpservers"
+      Write-Host "Setting NTP Servers to ${ntpservers}"
       w32tm /configure /manualpeerlist:$ntpservers /syncfromflags:manual /update
 
       $serverarray = $ntpservers.split(' ')
       Foreach ($server in $serverarray) {
         Push-Location
         Set-Location 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers'
-        Set-ItemProperty . ($serverarray.IndexOf($server) + 1) "$server"
+        Set-ItemProperty . ($serverarray.IndexOf($server) + 1) "${server}"
         Pop-Location
       }
 
@@ -86,8 +86,8 @@ params:
     )
 
     Foreach ($file in $remove_imaging_files) {
-      Write-Host "Removing: $file"
-      Remove-Item "$file" -force -recurse
+      Write-Host "Removing: ${file}"
+      Remove-Item "${file}" -force -recurse
     }
 
     Write-Host "Imaging has finished. Restarting system!"
