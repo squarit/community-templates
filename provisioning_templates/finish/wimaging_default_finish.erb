@@ -28,65 +28,40 @@ params:
   chef_enabled = @host.respond_to?(:chef_proxy) && @host.chef_proxy
 %>
 
-@echo off
 <% unless @host.params['localAdminAccountDisabled'] -%>
-  echo Activating administrator
-  net user administrator /active:yes
+  function enableAccount($user) {
+    Write-Host "Activating $user account"
+    $EnableUserCode = 512
+    $User = [ADSI]"WinNT://localhost/$user"
+    $User.userflags = $EnableUserCode
+    $User.setinfo()
+  }
+  enableAccount administrator
 <% end -%>
 
 <% if @host.pxe_build? %>
-  set ctr=0
-  set nettimeout=10
-
-  (echo Updating time)
-  (sc config w32time start= auto)
-  sc start w32time
-  :ntp_testip
-    ::ipconfig /renew
-    wget.exe --no-check-certificate <%= foreman_server_url %> -O C:\deploy\foreman_net_test
-    if %errorlevel% == 0 goto ntp_testip_ok
-    timeout /t 10 >NUL
-    set /a ctr=ctr+1
-    echo Retry network. Run %ctr% time(s)
-    if %ctr% GTR %nettimeout% (
-        echo Network error! Exiting.
-        exit 1
-        )
-    goto ntp_testip
-  :ntp_testip_ok
-
-  echo Network test OK!
-
   <% if @host.params['ntp-server'] %>
-    echo setting time server
-    w32tm /config /manualpeerlist:"<%= @host.params['ntp-server'] %>" /syncfromflags:manual /update
+    function configNTP($ntpservers) {
+      Write-Host "Setting NTP Servers to $ntpservers"
+      w32tm /configure /manualpeerlist:$ntpservers /syncfromflags:manual /update
+
+      $serverarray = $ntpservers.split(' ')
+      Foreach ($server in $serverarray) {
+        Push-Location
+        Set-Location 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers'
+        Set-ItemProperty . ($serverarray.IndexOf($server) + 1) "$server"
+        Pop-Location
+      }
+
+      Restart-Service w32time
+      w32tm /resync /rediscover
+    }
+    configNTP "<%= @host.params['ntp-server'] %>"
   <% end %>
-
-  echo sync time
-  w32tm /resync
-  w32tm /resync
-
-  :: You can join your machine to the domain right here >
 
   <% if @host.params['domainAdminAccount'] and @host.params['domainAdminAccountPasswd'] -%>
-    echo joining domain
+    Write-Host "Joining Domain"
     powershell.exe -OutputFormat text -ExecutionPolicy remotesigned -command c:\deploy\joinDomain.ps1
-  <% end %>
-
-  :: < You can join your machine to the domain right here
-
-  <% if @host.params['localAdminAccountDisabled'] %>
-    echo Disabling %tempAdminUser%
-    net user %tempAdminUser% %tempAdminUser% /active:no
-  <% end %>
-
-  <% if @host.params['foremanDebug'] != true %>
-    echo Safely remove wimaging files
-    sdelete.exe -accepteula -p 2 -r c:\wimaging
-    sdelete.exe -accepteula -p 2 c:\Windows\Panther\unattend.xml
-    sdelete.exe -accepteula -p 2 C:\Windows\Setup\Scripts\SetupComplete.cmd
-    sdelete.exe -accepteula -p 2 -r c:\minint
-    sdelete.exe -accepteula -p 2 -r c:\wimaging
   <% end %>
 
   <% if puppet_enabled %>
@@ -97,20 +72,25 @@ params:
     sc query puppet
   <% end%>
 
-  echo Tell foreman build has finished
+  Write-Host 'Tell foreman build has finished'
   wget.exe <%= foreman_url('built') %>
 
   <% if @host.params['foremanDebug'] != true %>
-    echo remove leftover directories
-    rmdir /s /q c:\wimaging
-    rmdir /s /q c:\minint
-    rmdir /s /q c:\extras
+    $remove_imaging_files = @(
+      "c:\wimaging",
+      "c:\Windows\Panther\unattend.xml",
+      "C:\Windows\Setup\Scripts\SetupComplete.cmd",
+      "c:\minint",
+      "c:\extras",
+      "c:\deploy"
+    )
 
-    echo rebooting hopefully after cleanup is done...
-    shutdown /r /t 10
+    Foreach ($file in $remove_imaging_files) {
+      Write-Host "Removing: $file"
+      Remove-Item "$file" -force -recurse
+    }
 
-    echo Safely removing c:\deploy
-    sdelete.exe -accepteula -p 2 -r c:\deploy
-    rmdir /s /q c:\deploy
-  <% end -%>
+    Write-Host "Imaging has finished. Restarting system!"
+    Restart-Computer
+  <% end %>
 <% end -%>
