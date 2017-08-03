@@ -1,0 +1,93 @@
+<%#
+kind: finish
+name: Wimaging default finish
+oses:
+- Windows Server 2008
+- Windows Server 2008 R2
+- Windows Server 2012
+- Windows Server 2012 R2
+- Windows Server 2016
+- Windows
+# Parameters are expected to be set in Foreman (globally or per group/host)
+params:
+- windowsLicenseKey: ABCDE-ABCDE-ABCDE-ABCDE-ABCDE # Valid Windows license key
+- windowsLicenseOwner: Company, INC # Legal owner of the Windows license key
+- localAdminAccountDisabled: false
+- ntpSever: time.windows.com,other.time.server
+- domainAdminAccount: administrator@domain.com # use this account to join domain
+- domainAdminAccountPasswd: Password for the domain Admin account
+- computerOU: OU=Computers,CN=domain,CN=com # Place the computer account in specified Organizational Unit
+- computerDomain: domain.com # domain to join
+- foremanDebug: false
+%>
+<%
+  # safemode renderer does not support unary negation
+  pm_set = @host.puppetmaster.empty? ? false : true
+  puppet_enabled = pm_set || @host.params['force-puppet'] && @host.params['force-puppet'] == 'true'
+  salt_enabled = @host.params['salt_master'] ? true : false
+  chef_enabled = @host.respond_to?(:chef_proxy) && @host.chef_proxy
+%>
+
+<% unless @host.params['localAdminAccountDisabled'] -%>
+  function enableAccount($user) {
+    Write-Host "Activating ${user} account"
+    $EnableUserCode = 512
+    $User = [ADSI]"WinNT://localhost/${user}"
+    $User.userflags = $EnableUserCode
+    $User.setinfo()
+  }
+  enableAccount administrator
+<% end -%>
+
+<% if @host.pxe_build? %>
+  <% if @host.params['ntp-server'] %>
+    function configNTP($ntpservers) {
+      Write-Host "Setting NTP Servers to ${ntpservers}"
+      w32tm /configure /manualpeerlist:$ntpservers /syncfromflags:manual /update
+
+      $serverarray = $ntpservers.split(' ')
+      Foreach ($server in $serverarray) {
+        Push-Location
+        Set-Location 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers'
+        Set-ItemProperty . ($serverarray.IndexOf($server) + 1) "${server}"
+        Pop-Location
+      }
+
+      Restart-Service w32time
+      w32tm /resync /rediscover
+    }
+    configNTP "<%= @host.params['ntp-server'] %>"
+  <% end %>
+
+  <% if @host.params['domainAdminAccount'] and @host.params['domainAdminAccountPasswd'] -%>
+    Write-Host "Joining Domain"
+    powershell.exe -OutputFormat text -ExecutionPolicy remotesigned -command c:\deploy\joinDomain.ps1
+  <% end %>
+
+  <% if puppet_enabled %>
+    <%= snippet 'puppetlabs_repo' %>
+    <%= snippet 'puppet_setup' %>
+  <% end%>
+
+  Write-Host 'Tell foreman build has finished'
+  Invoke-WebRequest "<%= foreman_url('built') %>"
+
+  <% if @host.params['foremanDebug'] != true %>
+    $remove_imaging_files = @(
+      "c:\wimaging",
+      "c:\Windows\Panther\unattend.xml",
+      "C:\Windows\Setup\Scripts\SetupComplete.cmd",
+      "c:\minint",
+      "c:\extras",
+      "c:\deploy"
+    )
+
+    Foreach ($file in $remove_imaging_files) {
+      Write-Host "Removing: ${file}"
+      Remove-Item "${file}" -force -recurse
+    }
+
+    Write-Host "Imaging has finished. Restarting system!"
+    Restart-Computer
+  <% end %>
+<% end -%>

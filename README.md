@@ -119,6 +119,25 @@ The templates use some Host Parameters to contol the flow of the template. These
 
 Detailed description is available at https://www.debian.org/releases/stable/amd64/apbs04.html.en
 
+## VMWare
+
+### VMWare Files
+
+There is one [Deployment Template](provision.erb) and accompanying [PXE config](PXELinux.erb),
+which works for:
+
+- VMWare ESXi 5.5u1
+- VMWare ESXi 6.0u2
+
+### Host Parameters
+
+The templates use some Host Parameters to control the flow of the template. These are:
+
+* `serial-console`: Outputs console and debug data during installation to the hosts serial console (Default: `false`)
+* `install-disk`: What device to install to (default: the first disk returned with `list-devices disk`)
+* `esxi-license`: Sets the vSphere ESXi license key (Default: `nil`)
+* `post-ks-debug`: Halt ESXi installation on warnings (Default: `nil`)
+
 ## ZTP
 
 Junos Zero-Touch-Provisioning support
