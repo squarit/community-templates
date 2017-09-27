@@ -109,7 +109,7 @@ dhclient
 ntp
 wget
 @Core
-<% if os_major >= 6 && @host.param_true?('enable-lsb') -%>
+<% if os_major >= 6 && host_param_true?('enable-lsb') -%>
 redhat-lsb-core
 <% end -%>
 
