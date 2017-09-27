@@ -5,13 +5,13 @@ oses:
 - RedHat
 -%>
 <%
-if @host.param_true?('serial-console')
+if host_param_true?('serial-console')
     output_console = "gdbPort=none logPort=none tty2Port=com2"
 else
     output_console = ""
 end
 -%>
-<% if @host.param_true?('serial-console') -%>
+<% if host_param_true?('serial-console') -%>
 serial 1 115200
 <% end -%>
 default esxi551
