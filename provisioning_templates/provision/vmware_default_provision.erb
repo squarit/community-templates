@@ -26,7 +26,7 @@ install --firstdisk=local --overwritevmfs
 serialnum --esx=<%= @host.params['esxi-license'] %>
 <% end -%>
 
-<% unless @host.param_true?('post-ks-debug') -%>
+<% unless host_param_true?('post-ks-debug') -%>
 # halt install on warnings
 paranoid
 <% end -%>
@@ -51,7 +51,7 @@ vim-cmd hostsvc/start_esx_shell
 # enable the host firewall
 esxcli network firewall set -e true
 
-<% if @host.param_true?('serial-console') -%>
+<% if host_param_true?('serial-console') -%>
 # enable output to serial console
 #disabled for now, unable to configure for both serial and console output
 #esxcli system settings kernel set --setting=tty2Port --value=com2
