@@ -52,6 +52,15 @@ d-i partman-auto-lvm/new_vg_name string <%= vg_name %>
 <% end -%>
 <% end -%>
 
+<% if host_param_true?('partitioning-allow-noswap') -%>
+d-i partman-basicfilesystems/no_swap boolean false
+<% end -%>
+
+<% if host_param('partitioning-disk-label') -%>
+d-i partman-partitioning/choose_label string <%= host_param('partitioning-disk-label') %>
+d-i partman-partitioning/default_label string <%= host_param('partitioning-disk-label') %>
+<% end -%>
+
 # You can choose one of the three predefined partitioning recipes:
 # - atomic: all files in one partition
 # - home:   separate /home partition
@@ -63,7 +72,7 @@ d-i partman-auto/choose_recipe select <%= partitioning_recipe %>
 # If you have a way to get a recipe file into the d-i environment, you can
 # just point at it.
 d-i partman-auto/expert_recipe string \
-<%= partitioning_expert_recipe.gsub(/$/, " \\") %>
+<%= partitioning_expert_recipe.gsub(/(?:\n\r?|\r\n?)/, " \\\n") %>
 
 <% end -%>
 
