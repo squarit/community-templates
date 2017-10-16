@@ -96,17 +96,19 @@ Tested on:
 
 ### Host Parameters
 
-The templates use some Host Parameters to contol the flow of the template. These are:
+The templates use some Host Parameters to control the flow of the template. These are:
 
 * `install-disk`: What device to install to (default: the first disk returned with `list-devices disk`)
 * `partitioning-method`: `regular` (default for `Preseed default`), `lvm` (default for `Preseed default lvm`) or `crypto`
 * `partitioning-recipe`: `atomic` (default for `Preseed default`), `home`, or `multi` (default for `Preseed default lvm`)
+* `partitioning-disk-label`: If present labels the disk as specified. (Default: automatic/not set. Can be `msdos` or `gpt`)
 * `partitioning-expert-recipe`: Entire recipe (default: empty, i.e `partitioning-recipe`)
 * `partitioning-vg-name`: LVM volume group name (default: `vg01` for `Preseed default lvm`)
 * `partitioning-filesystem`: One of `ext4`, `ext4`, `btrfs`, ... (default: empty, the default is used)
 * `partitioning-crypto-erase`: Secure erase partition when using crypto method. `true` or `false` (default: `false`)
 * `partitioning-crypto-password`: Password for luks crypto method. Recommend changing this post install! (default: `temporarypassword`)
 * `partitioning-crypto-password-weak`: Allow weak passwords when using crypto. (default: `false`)
+* `partitioning-allow-noswap`: Allow partitioning without swap. (default: `false`)
 * `enable-puppetlabs-repo`: Add the Puppet Labs APT repo to the APT sources during install (default: `false`)
 * `enable-puppetlabs-pc1-repo`: Add the Puppet Labs PC1 APT repo to the APT sources during install (default: `false`)
 * `enable-saltstack-repo`: Add the SaltStack APT repo to the APT sources during install (default: `false`)
