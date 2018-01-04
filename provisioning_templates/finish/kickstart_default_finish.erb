@@ -1,6 +1,7 @@
 <%#
 kind: finish
 name: Kickstart default finish
+model: ProvisioningTemplate
 oses:
 - CentOS
 - Fedora
@@ -79,7 +80,7 @@ fi
 
 <% if host_param_true?('ansible_tower_provisioning') -%>
 <%= save_to_file('/root/ansible_provisioning_call.sh', snippet('ansible_tower_callback_script')) %>
-./root/ansible_provisioning_call.sh
+/root/ansible_provisioning_call.sh
 <% end -%>
 
 sync
