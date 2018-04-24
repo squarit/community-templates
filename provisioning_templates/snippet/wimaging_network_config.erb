@@ -1,6 +1,7 @@
 <%#
 kind: snippet
 name: wimaging_network_config
+model: ProvisioningTemplate
 -%>
 <% subnet = @host.subnet -%>
 <% if subnet.respond_to?(:dhcp_boot_mode?) -%>
