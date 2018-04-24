@@ -1,0 +1,18 @@
+<%#
+kind: PXELinux
+name: WDS PXE Chain
+model: ProvisioningTemplate
+oses:
+- Windows 10
+- Windows 2016
+- Windows 2012
+- Windows
+- Windows 2012 R2
+%>
+
+<% if @host.pxe_build? %>
+default Windows
+label Windows
+    kernel pxechn.c32
+    append <%= host_param('windowsWDSServer') %>::<%= host_param('windowsWDSBootfile') %> -W
+<% end %>
