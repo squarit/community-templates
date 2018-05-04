@@ -13,6 +13,7 @@ proxy_string_bits = proxy_uri ? " -ProxyUsage Override -ProxyList #{proxy_uri}" 
 os_family = @host.operatingsystem.family
 os_major  = @host.operatingsystem.major.to_i
 os_name   = @host.operatingsystem.name
+xenial_or_newer = (@host.operatingsystem.name == 'Ubuntu' && os_major >= 14)
 
 if os_family == 'Redhat'
   repo_host = 'yum.puppetlabs.com'
@@ -49,8 +50,13 @@ rpm -Uvh<%= http_proxy %><%= http_port %> https://<%= repo_host %>/<%= repo_subd
 <% elsif os_family == 'Debian' -%>
 apt-get update
 apt-get -y install ca-certificates
+<% if xenial_or_newer -%>
+wget -O /tmp/<%= repo_name %>-xenial.deb<%= proxy_string %> https://<%= repo_host %>/<%= repo_name %>-xenial.deb
+dpkg -i /tmp/<%= repo_name %>-xenial.deb
+<% else -%>
 wget -O /tmp/<%= repo_name %>-<%= repo_os %>.deb<%= proxy_string %> https://<%= repo_host %>/<%= repo_name %>-<%= repo_os %>.deb
 dpkg -i /tmp/<%= repo_name %>-<%= repo_os %>.deb
+<% end -%>
 <% elsif os_family == 'Windows' -%>
 $puppet_agent_source = 'https://<%= repo_host %>/<%= repo_os %>/puppet-agent-<%= @host.architecture %>-latest.msi'
 $puppet_agent_msi = "${env:TEMP}\puppet-agent-<%= @host.architecture %>.msi"
