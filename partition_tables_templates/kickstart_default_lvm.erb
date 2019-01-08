@@ -1,0 +1,17 @@
+<%#
+kind: ptable
+name: Kickstart default LVM
+model: Ptable
+oses:
+- CentOS
+- Fedora
+- RedHat
+%>
+zerombr
+clearpart --all --initlabel
+part biosboot --fstype=biosboot --size=1
+part /boot --fstype=<%= @host.params['partitioning-filesystem'] || 'ext4' %> --size=512
+part /boot/efi --fstype efi --size=256
+part pv.1 --size=20000 --grow
+volgroup vg00 pv.1
+logvol / --vgname=vg00 --size=10000 --grow --name=root --fstype=<%= @host.params['partitioning-filesystem'] || 'ext4' %>
